@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>返しの達人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            padding: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .chat-container {
+            background: #f5f6fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 250px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .speaker-label {
+            font-size: 0.85em;
+            color: #888;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .message-bubble {
+            padding: 15px 18px;
+            border-radius: 15px;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+
+        .friend-message {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .your-response {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 50px;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .situation-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #ffeaa7;
+            color: #d63031;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .input-section {
+            margin-top: 20px;
+        }
+
+        .response-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.05em;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .response-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-btn {
+            flex: 2;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(58, 123, 213, 0.3);
+        }
+
+        .hint-btn {
+            flex: 1;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .hint-btn:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .next-btn {
+            flex: 2;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
+        }
+
+        .evaluation {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+
+        .evaluation.show {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-number {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score-message {
+            font-size: 1.2em;
+            color: #333;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .feedback-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .feedback-title {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .good-example {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .hint-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .hint-box.show {
+            display: block;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+
+        .skill-badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .skill-badge {
+            padding: 4px 10px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 返しの達人</h1>
+            <p class="subtitle">日常会話で使える鋭い返しをマスターしよう</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-label">総合スコア</div>
+                <div class="stat-value" id="totalScore">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">平均評価</div>
+                <div class="stat-value" id="averageScore">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">練習回数</div>
+                <div class="stat-value" id="practiceCount">0</div>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message">
+                <div class="speaker-label">シチュエーション</div>
+                <div class="situation-tag" id="situationTag">会話を開始してください</div>
+            </div>
+            <div id="conversationArea">
+                <div class="message">
+                    <div class="speaker-label">相手</div>
+                    <div class="message-bubble friend-message" id="friendMessage">
+                        「次の会話」ボタンを押して練習を開始しましょう
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-box" id="hintBox">
+            <strong>💡 ヒント:</strong>
+            <div id="hintText"></div>
+        </div>
+
+        <div class="input-section">
+            <textarea 
+                class="response-input" 
+                id="responseInput" 
+                placeholder="相手の話に対して、気の利いた返しや鋭いツッコミを入力してください..."
+                disabled
+            ></textarea>
+            
+            <div class="button-group">
+                <button class="submit-btn" id="submitBtn" onclick="submitResponse()" disabled>
+                    返しを評価
+                </button>
+                <button class="hint-btn" id="hintBtn" onclick="showHint()" disabled>
+                    ヒント
+                </button>
+                <button class="next-btn" id="nextBtn" onclick="nextConversation()">
+                    次の会話
+                </button>
+            </div>
+        </div>
+
+        <div class="evaluation" id="evaluationArea">
+            <div class="score-display">
+                <div class="score-number" id="scoreNumber">0</div>
+                <div class="score-message" id="scoreMessage"></div>
+                <div class="skill-badges" id="skillBadges"></div>
+            </div>
+            
+            <div class="feedback-section">
+                <div class="feedback-title">あなたの返し：</div>
+                <div id="userResponse"></div>
+            </div>
+            
+            <div class="feedback-section">
+                <div class="feedback-title">プロの返し例：</div>
+                <div class="good-example" id="goodExample"></div>
+                <div class="feedback-title" style="margin-top: 15px;">ポイント解説：</div>
+                <div id="explanation"></div>
+            </div>
+        </div>
+
+        <div class="progress-indicator" id="progressIndicator">
+            練習 <span id="currentRound">0</span> / 10
+        </div>
+    </div>
+
+    <script>
+        const conversations = [
+            {
+                situation: "友人との雑談",
+                message: "最近さ、朝活始めたんだよね。毎朝5時に起きてジョギングして、そのあとスムージー作って、瞑想して、読書して、それから仕事行くようにしてるんだ。もう3日も続いてるし、これは習慣化できそうな気がする！人生変わるかもしれない！",
+                hints: "継続期間の短さ、理想と現実のギャップ、過度な期待",
+                goodResponses: [
+                    "3日で人生変わるなら、みんな成功者だね",
+                    "来週には『夜活最高！』って言ってそう",
+                    "4日目が最大の壁らしいよ、頑張って"
+                ],
+                keywords: ["3日", "続", "習慣", "早い", "まだ", "これから", "短", "甘い"],
+                explanation: "まだ3日しか続いていないのに習慣化を確信している点を、優しくツッコむのがポイント。相手を完全に否定せず、ユーモアを交えて現実を指摘する。"
+            },
+            {
+                situation: "同僚との会話",
+                message: "うちの会社、本当に効率悪いと思うんですよね。会議ばっかりで実際の仕事する時間がない。今日も会議が4つもあって、その準備で結局一日終わっちゃいました。会議を減らすための会議をやるべきだと思うんです。",
+                hints: "提案の矛盾、会議への不満と新たな会議の提案",
+                goodResponses: [
+                    "それ、また会議増やすってことじゃない？",
+                    "会議を減らす会議の準備で忙しくなりそうだね",
+                    "その会議の日程を決める会議から始めないと"
+                ],
+                keywords: ["会議", "増", "矛盾", "同じ", "それ", "また", "逆効果"],
+                explanation: "会議を減らしたいのに新たな会議を提案している矛盾を指摘。相手の不満に共感しつつ、提案の問題点をユーモラスに示す。"
+            },
+            {
+                situation: "家族との食事中",
+                message: "最近ダイエット始めたんだけど、糖質制限がいいって聞いたから、ご飯は半分にして、その代わりに唐揚げとかお肉をたくさん食べるようにしてるの。あと、デザートは別腹だから大丈夫だよね。ケーキは幸せホルモンが出るから、ストレス太りを防げるし。",
+                hints: "ダイエット方法の都合の良い解釈、デザート別腹理論",
+                goodResponses: [
+                    "そのダイエット、カロリーは制限してないんだね",
+                    "別腹って都合いい臓器だよね、私も欲しい",
+                    "幸せホルモンで痩せるなら、みんなケーキ食べ放題だね"
+                ],
+                keywords: ["カロリー", "別腹", "都合", "矛盾", "逆", "太", "意味"],
+                explanation: "ダイエットの本質を理解せず、都合よく解釈している点を指摘。デザートは別腹という言い訳を軽妙にツッコむ。"
+            },
+            {
+                situation: "友人とカフェで",
+                message: "私、めちゃくちゃ節約家なんだよね。コンビニでペットボトル買うのもったいないから、いつも水筒持ち歩いてるし、電車も一駅分は歩くようにしてる。この前なんて、10円安いティッシュ買うために隣町まで行ったんだ。交通費500円かかったけど、お得に買い物できて満足！",
+                hints: "節約と交通費の矛盾、本末転倒な行動",
+                goodResponses: [
+                    "その節約、490円の赤字だけど大丈夫？",
+                    "交通費を節約する方法から始めた方がいいかも",
+                    "隣町までの散歩代と思えば...いや、高いな"
+                ],
+                keywords: ["交通費", "赤字", "損", "矛盾", "本末転倒", "計算", "逆"],
+                explanation: "10円節約するために500円使っている矛盾を指摘。数字を使って具体的に損失を示すと効果的。"
+            },
+            {
+                situation: "職場の休憩室で",
+                message: "英語の勉強始めたんですよ。毎日アプリで5分だけ。でも、なかなか上達しないんですよね。もう2週間もやってるのに、全然ペラペラにならない。やっぱり日本人には英語は向いてないのかな。それか、このアプリが悪いのかも。もっと高い教材買った方がいいですかね？",
+                hints: "期待と努力のギャップ、2週間で結果を求める性急さ",
+                goodResponses: [
+                    "2週間で合計70分...そりゃ厳しいよね",
+                    "その調子だと、ペラペラまであと10年かな",
+                    "1日5分なら、挨拶マスターするのも来年だね"
+                ],
+                keywords: ["2週間", "5分", "短い", "少ない", "無理", "時間", "足りない"],
+                explanation: "1日5分を2週間（計70分）でペラペラを期待する非現実的な期待を、具体的な数字で示して指摘。"
+            },
+            {
+                situation: "ランチタイム",
+                message: "私、すごく健康に気を使ってるんです。毎日サラダ食べてるし、週末はジムも行ってます。まあ、ジムの後はいつもラーメン食べちゃうんですけどね、運動した後だからカロリーゼロですよね。あと、サラダにかけるドレッシングは好きなだけかけてます。野菜だから太らないし。",
+                hints: "健康への気遣いと実際の行動の矛盾",
+                goodResponses: [
+                    "そのカロリーゼロ理論、特許取れそうだね",
+                    "ジムはラーメン屋への通り道なんだ",
+                    "ドレッシングが主食でサラダが付け合わせになってない？"
+                ],
+                keywords: ["カロリー", "ゼロ", "矛盾", "意味", "逆", "ラーメン", "ドレッシング"],
+                explanation: "健康を意識していると言いながら、実際の行動が伴っていない矛盾をユーモラスに指摘。"
+            },
+            {
+                situation: "買い物帰り",
+                message: "断捨離にハマっててさ、この前も大量に服を処分したんだ。クローゼットがスッキリして気持ちいい！それで、空いたスペースができたから、今日セールで服を10着も買っちゃった。だって、70%オフだよ？買わない理由がないでしょ。これでまた断捨離できるし、一石二鳥！",
+                hints: "断捨離の目的と真逆の行動、セールの誘惑",
+                goodResponses: [
+                    "断捨離って、物を減らすためじゃなかったっけ？",
+                    "そのサイクル、服屋さんは大喜びだね",
+                    "永久機関みたいな断捨離システムだね"
+                ],
+                keywords: ["断捨離", "買", "矛盾", "逆", "サイクル", "意味", "増"],
+                explanation: "断捨離で空けたスペースにまた物を買う矛盾したサイクルを指摘。"
+            },
+            {
+                situation: "SNSの話題",
+                message: "インスタ映えする生活してるよ〜。毎日違うカフェ行って、おしゃれな写真撮ってる。昨日なんて、コーヒー1杯に30分かけて角度調整して、フィルター20個試して、結局コーヒー冷めちゃって飲まなかったけど、いいね200個ついたから満足！実際の味？覚えてないや。",
+                hints: "本来の目的を見失っている、本末転倒",
+                goodResponses: [
+                    "そのカフェ、写真スタジオとして使ってるんだね",
+                    "コーヒーの味より『いいね』の味を楽しんでるのか",
+                    "30分かけて冷めたコーヒーの写真、それはそれで映えそう"
+                ],
+                keywords: ["本末転倒", "写真", "味", "冷", "意味", "目的", "いいね"],
+                explanation: "カフェの本来の目的（コーヒーを楽しむ）を忘れて、写真撮影に夢中になっている点を皮肉る。"
+            },
+            {
+                situation: "仕事の愚痴",
+                message: "うちの上司、本当に時代遅れなんですよ。いまだに紙で資料作れって言うし、メールより電話の方が早いとか言って、結局電話の内容をメールでも送れって...効率化とか全然考えてない。私なら全部デジタル化して、会議も全部オンラインにして、でも重要な話は対面がいいから、結局今と変わらないかも。",
+                hints: "批判しながら同じ結論に至る、改善案の曖昧さ",
+                goodResponses: [
+                    "結局、今の上司と同じ結論じゃない？",
+                    "一周回って上司の考えに辿り着いたね",
+                    "その改革、現状維持って名前だよ"
+                ],
+                keywords: ["同じ", "結局", "変わらない", "一周", "矛盾", "現状維持"],
+                explanation: "上司を批判しながら、自分の改善案も結局同じところに行き着いている矛盾を指摘。"
+            },
+            {
+                situation: "恋愛相談",
+                message: "私、すごく自立してる女性なの。誰にも依存しないし、一人で何でもできる。でも彼氏には毎日LINEの返信早くして欲しいし、週末は必ず会いたいし、私のこと一番に考えて欲しい。あと、記念日は全部覚えててサプライズして欲しいな。でも束縛する女は嫌いって言ってるから、私は違うよね？",
+                hints: "自立していると言いながら依存的な要求",
+                goodResponses: [
+                    "その自立、彼氏には適用されないシステムなんだ",
+                    "束縛の定義、辞書で調べた方がいいかも",
+                    "自立してる人の要求リスト、すごく依存的だね"
+                ],
+                keywords: ["依存", "束縛", "矛盾", "自立", "要求", "違う", "逆"],
+                explanation: "自立を主張しながら、実際は依存的で束縛的な要求をしている矛盾を優しく指摘。"
+            }
+        ];
+
+        let currentConversation = null;
+        let totalScore = 0;
+        let practiceCount = 0;
+        let scores = [];
+        let currentRound = 0;
+        let usedHint = false;
+
+        function nextConversation() {
+            currentRound++;
+            practiceCount++;
+            
+            // ランダムに会話を選択
+            currentConversation = conversations[Math.floor(Math.random() * conversations.length)];
+            
+            // UIリセット
+            document.getElementById('situationTag').textContent = currentConversation.situation;
+            document.getElementById('friendMessage').textContent = currentConversation.message;
+            document.getElementById('responseInput').value = '';
+            document.getElementById('responseInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('hintBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('evaluationArea').classList.remove('show');
+            document.getElementById('hintBox').classList.remove('show');
+            usedHint = false;
+            
+            // 統計更新
+            document.getElementById('practiceCount').textContent = practiceCount;
+            document.getElementById('currentRound').textContent = currentRound;
+            
+            // 入力欄にフォーカス
+            document.getElementById('responseInput').focus();
+        }
+
+        function submitResponse() {
+            const userResponse = document.getElementById('responseInput').value.trim();
+            
+            if (!userResponse) {
+                alert('返しを入力してください！');
+                return;
+            }
+            
+            // 評価
+            const score = evaluateResponse(userResponse);
+            displayEvaluation(score, userResponse);
+            
+            // スコア更新
+            totalScore += score;
+            scores.push(score);
+            updateStats();
+            
+            // ボタン状態更新
+            document.getElementById('responseInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('hintBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function evaluateResponse(response) {
+            const lowerResponse = response.toLowerCase();
+            let score = 40; // 基礎点
+            let matchedKeywords = 0;
+            
+            // キーワードマッチング
+            for (const keyword of currentConversation.keywords) {
+                if (lowerResponse.includes(keyword)) {
+                    matchedKeywords++;
+                }
+            }
+            
+            // スコア計算
+            score += matchedKeywords * 15;
+            
+            // 返しの質を評価
+            if (response.length >= 20 && response.length <= 60) {
+                score += 10; // 適切な長さ
+            }
+            
+            // 疑問形で返している場合
+            if (response.includes('？') || response.includes('?')) {
+                score += 5;
+            }
+            
+            // ユーモア要素（皮肉、比喩を含む場合）
+            const humorWords = ['みたい', 'そう', 'かも', 'だね', 'じゃない', 'という', 'って'];
+            for (const word of humorWords) {
+                if (lowerResponse.includes(word)) {
+                    score += 3;
+                    break;
+                }
+            }
+            
+            // ヒント使用ペナルティ
+            if (usedHint) {
+                score = Math.floor(score * 0.8);
+            }
+            
+            return Math.min(score, 100);
+        }
+
+        function displayEvaluation(score, userResponse) {
+            const evaluationArea = document.getElementById('evaluationArea');
+            const scoreNumber = document.getElementById('scoreNumber');
+            const scoreMessage = document.getElementById('scoreMessage');
+            const userResponseDiv = document.getElementById('userResponse');
+            const goodExample = document.getElementById('goodExample');
+            const explanation = document.getElementById('explanation');
+            const skillBadges = document.getElementById('skillBadges');
+            
+            // スコア表示
+            scoreNumber.textContent = score;
+            
+            // メッセージ
+            let message = '';
+            let badges = [];
+            
+            if (score >= 90) {
+                message = '完璧！プロレベルの返しです！';
+                badges = ['鋭い観察眼', 'ユーモアセンス', '的確な指摘'];
+            } else if (score >= 75) {
+                message = '素晴らしい！キレのある返しです！';
+                badges = ['良い着眼点', 'ウィット'];
+            } else if (score >= 60) {
+                message = 'いい感じ！もう少し鋭さが欲しい！';
+                badges = ['観察力'];
+            } else if (score >= 45) {
+                message = 'まずまず。矛盾点を見つけられていますか？';
+                badges = ['努力賞'];
+            } else {
+                message = '練習あるのみ！相手の話をよく聞いてみよう';
+                badges = ['チャレンジャー'];
+            }
+            
+            scoreMessage.textContent = message;
+            userResponseDiv.textContent = userResponse;
+            
+            // 良い例を表示
+            const exampleIndex = Math.floor(Math.random() * currentConversation.goodResponses.length);
+            goodExample.textContent = currentConversation.goodResponses[exampleIndex];
+            
+            // 解説
+            explanation.textContent = currentConversation.explanation;
+            
+            // スキルバッジ表示
+            skillBadges.innerHTML = '';
+            badges.forEach(badge => {
+                const badgeDiv = document.createElement('div');
+                badgeDiv.className = 'skill-badge';
+                badgeDiv.textContent = badge;
+                skillBadges.appendChild(badgeDiv);
+            });
+            
+            evaluationArea.classList.add('show');
+        }
+
+        function showHint() {
+            const hintBox = document.getElementById('hintBox');
+            const hintText = document.getElementById('hintText');
+            
+            hintText.textContent = currentConversation.hints;
+            hintBox.classList.add('show');
+            usedHint = true;
+            
+            document.getElementById('hintBtn').disabled = true;
+        }
+
+        function updateStats() {
+            document.getElementById('totalScore').textContent = totalScore;
+            
+            if (scores.length > 0) {
+                const average = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+                document.getElementById('averageScore').textContent = average;
+            }
+        }
+
+        // Enterキーで送信（Shift+Enterは改行）
+        document.getElementById('responseInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey && !this.disabled) {
+                e.preventDefault();
+                submitResponse();
+            }
+        });
+    </script>
+</body>
+</html>
