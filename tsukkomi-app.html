@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>返しの達人</title>
+    <title>返しの達人AI</title>
     <style>
         * {
             margin: 0;
@@ -45,9 +45,21 @@
             margin-bottom: 8px;
         }
 
+        .ai-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
         .subtitle {
             color: #666;
             font-size: 0.95em;
+            margin-top: 10px;
         }
 
         .stats-bar {
@@ -140,6 +152,30 @@
             font-weight: bold;
         }
 
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-indicator.show {
+            display: block;
+        }
+
+        .loading-dots {
+            display: inline-block;
+            animation: loading 1.4s infinite;
+        }
+
+        @keyframes loading {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-15px);
+            }
+        }
+
         .input-section {
             margin-top: 20px;
         }
@@ -194,23 +230,13 @@
             box-shadow: 0 8px 20px rgba(58, 123, 213, 0.3);
         }
 
-        .hint-btn {
-            flex: 1;
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .hint-btn:hover:not(:disabled) {
-            background: #e0e0e0;
-        }
-
-        .next-btn {
+        .generate-btn {
             flex: 2;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
 
-        .next-btn:hover:not(:disabled) {
+        .generate-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
         }
@@ -283,16 +309,26 @@
             margin-top: 10px;
         }
 
-        .hint-box {
+        .ai-thinking {
+            color: #667eea;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .error-message {
             background: #fff3cd;
-            border-left: 4px solid #ffc107;
+            color: #856404;
             padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
             display: none;
         }
 
-        .hint-box.show {
+        .error-message.show {
             display: block;
         }
 
@@ -308,6 +344,7 @@
             gap: 8px;
             margin-top: 10px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .skill-badge {
@@ -318,13 +355,42 @@
             font-size: 0.85em;
             font-weight: bold;
         }
+
+        .category-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .category-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>💬 返しの達人</h1>
-            <p class="subtitle">日常会話で使える鋭い返しをマスターしよう</p>
+            <h1>💬 返しの達人AI <span class="ai-badge">AI Powered</span></h1>
+            <p class="subtitle">AIが生成する会話に鋭い返しを決めよう</p>
         </div>
 
         <div class="stats-bar">
@@ -342,25 +408,34 @@
             </div>
         </div>
 
+        <div class="category-selector">
+            <button class="category-btn active" onclick="setCategory('random')">ランダム</button>
+            <button class="category-btn" onclick="setCategory('work')">職場</button>
+            <button class="category-btn" onclick="setCategory('friend')">友人</button>
+            <button class="category-btn" onclick="setCategory('family')">家族</button>
+            <button class="category-btn" onclick="setCategory('shopping')">買い物</button>
+            <button class="category-btn" onclick="setCategory('health')">健康</button>
+        </div>
+
         <div class="chat-container" id="chatContainer">
             <div class="message">
                 <div class="speaker-label">シチュエーション</div>
-                <div class="situation-tag" id="situationTag">会話を開始してください</div>
+                <div class="situation-tag" id="situationTag">AIが会話を生成します</div>
             </div>
             <div id="conversationArea">
                 <div class="message">
                     <div class="speaker-label">相手</div>
                     <div class="message-bubble friend-message" id="friendMessage">
-                        「次の会話」ボタンを押して練習を開始しましょう
+                        「新しい会話を生成」ボタンを押してスタート！
                     </div>
                 </div>
             </div>
+            <div class="loading-indicator" id="loadingIndicator">
+                <div class="ai-thinking">AIが会話を考えています<span class="loading-dots">...</span></div>
+            </div>
         </div>
 
-        <div class="hint-box" id="hintBox">
-            <strong>💡 ヒント:</strong>
-            <div id="hintText"></div>
-        </div>
+        <div class="error-message" id="errorMessage"></div>
 
         <div class="input-section">
             <textarea 
@@ -372,13 +447,10 @@
             
             <div class="button-group">
                 <button class="submit-btn" id="submitBtn" onclick="submitResponse()" disabled>
-                    返しを評価
+                    AIに評価してもらう
                 </button>
-                <button class="hint-btn" id="hintBtn" onclick="showHint()" disabled>
-                    ヒント
-                </button>
-                <button class="next-btn" id="nextBtn" onclick="nextConversation()">
-                    次の会話
+                <button class="generate-btn" id="generateBtn" onclick="generateNewConversation()">
+                    新しい会話を生成
                 </button>
             </div>
         </div>
@@ -396,176 +468,199 @@
             </div>
             
             <div class="feedback-section">
-                <div class="feedback-title">プロの返し例：</div>
+                <div class="feedback-title">AIの評価コメント：</div>
+                <div id="aiComment"></div>
+            </div>
+            
+            <div class="feedback-section">
+                <div class="feedback-title">AIが考えた返し例：</div>
                 <div class="good-example" id="goodExample"></div>
-                <div class="feedback-title" style="margin-top: 15px;">ポイント解説：</div>
-                <div id="explanation"></div>
             </div>
         </div>
 
         <div class="progress-indicator" id="progressIndicator">
-            練習 <span id="currentRound">0</span> / 10
+            練習 <span id="currentRound">0</span> 回目
         </div>
     </div>
 
     <script>
-        const conversations = [
-            {
-                situation: "友人との雑談",
-                message: "最近さ、朝活始めたんだよね。毎朝5時に起きてジョギングして、そのあとスムージー作って、瞑想して、読書して、それから仕事行くようにしてるんだ。もう3日も続いてるし、これは習慣化できそうな気がする！人生変わるかもしれない！",
-                hints: "継続期間の短さ、理想と現実のギャップ、過度な期待",
-                goodResponses: [
-                    "3日で人生変わるなら、みんな成功者だね",
-                    "来週には『夜活最高！』って言ってそう",
-                    "4日目が最大の壁らしいよ、頑張って"
-                ],
-                keywords: ["3日", "続", "習慣", "早い", "まだ", "これから", "短", "甘い"],
-                explanation: "まだ3日しか続いていないのに習慣化を確信している点を、優しくツッコむのがポイント。相手を完全に否定せず、ユーモアを交えて現実を指摘する。"
-            },
-            {
-                situation: "同僚との会話",
-                message: "うちの会社、本当に効率悪いと思うんですよね。会議ばっかりで実際の仕事する時間がない。今日も会議が4つもあって、その準備で結局一日終わっちゃいました。会議を減らすための会議をやるべきだと思うんです。",
-                hints: "提案の矛盾、会議への不満と新たな会議の提案",
-                goodResponses: [
-                    "それ、また会議増やすってことじゃない？",
-                    "会議を減らす会議の準備で忙しくなりそうだね",
-                    "その会議の日程を決める会議から始めないと"
-                ],
-                keywords: ["会議", "増", "矛盾", "同じ", "それ", "また", "逆効果"],
-                explanation: "会議を減らしたいのに新たな会議を提案している矛盾を指摘。相手の不満に共感しつつ、提案の問題点をユーモラスに示す。"
-            },
-            {
-                situation: "家族との食事中",
-                message: "最近ダイエット始めたんだけど、糖質制限がいいって聞いたから、ご飯は半分にして、その代わりに唐揚げとかお肉をたくさん食べるようにしてるの。あと、デザートは別腹だから大丈夫だよね。ケーキは幸せホルモンが出るから、ストレス太りを防げるし。",
-                hints: "ダイエット方法の都合の良い解釈、デザート別腹理論",
-                goodResponses: [
-                    "そのダイエット、カロリーは制限してないんだね",
-                    "別腹って都合いい臓器だよね、私も欲しい",
-                    "幸せホルモンで痩せるなら、みんなケーキ食べ放題だね"
-                ],
-                keywords: ["カロリー", "別腹", "都合", "矛盾", "逆", "太", "意味"],
-                explanation: "ダイエットの本質を理解せず、都合よく解釈している点を指摘。デザートは別腹という言い訳を軽妙にツッコむ。"
-            },
-            {
-                situation: "友人とカフェで",
-                message: "私、めちゃくちゃ節約家なんだよね。コンビニでペットボトル買うのもったいないから、いつも水筒持ち歩いてるし、電車も一駅分は歩くようにしてる。この前なんて、10円安いティッシュ買うために隣町まで行ったんだ。交通費500円かかったけど、お得に買い物できて満足！",
-                hints: "節約と交通費の矛盾、本末転倒な行動",
-                goodResponses: [
-                    "その節約、490円の赤字だけど大丈夫？",
-                    "交通費を節約する方法から始めた方がいいかも",
-                    "隣町までの散歩代と思えば...いや、高いな"
-                ],
-                keywords: ["交通費", "赤字", "損", "矛盾", "本末転倒", "計算", "逆"],
-                explanation: "10円節約するために500円使っている矛盾を指摘。数字を使って具体的に損失を示すと効果的。"
-            },
-            {
-                situation: "職場の休憩室で",
-                message: "英語の勉強始めたんですよ。毎日アプリで5分だけ。でも、なかなか上達しないんですよね。もう2週間もやってるのに、全然ペラペラにならない。やっぱり日本人には英語は向いてないのかな。それか、このアプリが悪いのかも。もっと高い教材買った方がいいですかね？",
-                hints: "期待と努力のギャップ、2週間で結果を求める性急さ",
-                goodResponses: [
-                    "2週間で合計70分...そりゃ厳しいよね",
-                    "その調子だと、ペラペラまであと10年かな",
-                    "1日5分なら、挨拶マスターするのも来年だね"
-                ],
-                keywords: ["2週間", "5分", "短い", "少ない", "無理", "時間", "足りない"],
-                explanation: "1日5分を2週間（計70分）でペラペラを期待する非現実的な期待を、具体的な数字で示して指摘。"
-            },
-            {
-                situation: "ランチタイム",
-                message: "私、すごく健康に気を使ってるんです。毎日サラダ食べてるし、週末はジムも行ってます。まあ、ジムの後はいつもラーメン食べちゃうんですけどね、運動した後だからカロリーゼロですよね。あと、サラダにかけるドレッシングは好きなだけかけてます。野菜だから太らないし。",
-                hints: "健康への気遣いと実際の行動の矛盾",
-                goodResponses: [
-                    "そのカロリーゼロ理論、特許取れそうだね",
-                    "ジムはラーメン屋への通り道なんだ",
-                    "ドレッシングが主食でサラダが付け合わせになってない？"
-                ],
-                keywords: ["カロリー", "ゼロ", "矛盾", "意味", "逆", "ラーメン", "ドレッシング"],
-                explanation: "健康を意識していると言いながら、実際の行動が伴っていない矛盾をユーモラスに指摘。"
-            },
-            {
-                situation: "買い物帰り",
-                message: "断捨離にハマっててさ、この前も大量に服を処分したんだ。クローゼットがスッキリして気持ちいい！それで、空いたスペースができたから、今日セールで服を10着も買っちゃった。だって、70%オフだよ？買わない理由がないでしょ。これでまた断捨離できるし、一石二鳥！",
-                hints: "断捨離の目的と真逆の行動、セールの誘惑",
-                goodResponses: [
-                    "断捨離って、物を減らすためじゃなかったっけ？",
-                    "そのサイクル、服屋さんは大喜びだね",
-                    "永久機関みたいな断捨離システムだね"
-                ],
-                keywords: ["断捨離", "買", "矛盾", "逆", "サイクル", "意味", "増"],
-                explanation: "断捨離で空けたスペースにまた物を買う矛盾したサイクルを指摘。"
-            },
-            {
-                situation: "SNSの話題",
-                message: "インスタ映えする生活してるよ〜。毎日違うカフェ行って、おしゃれな写真撮ってる。昨日なんて、コーヒー1杯に30分かけて角度調整して、フィルター20個試して、結局コーヒー冷めちゃって飲まなかったけど、いいね200個ついたから満足！実際の味？覚えてないや。",
-                hints: "本来の目的を見失っている、本末転倒",
-                goodResponses: [
-                    "そのカフェ、写真スタジオとして使ってるんだね",
-                    "コーヒーの味より『いいね』の味を楽しんでるのか",
-                    "30分かけて冷めたコーヒーの写真、それはそれで映えそう"
-                ],
-                keywords: ["本末転倒", "写真", "味", "冷", "意味", "目的", "いいね"],
-                explanation: "カフェの本来の目的（コーヒーを楽しむ）を忘れて、写真撮影に夢中になっている点を皮肉る。"
-            },
-            {
-                situation: "仕事の愚痴",
-                message: "うちの上司、本当に時代遅れなんですよ。いまだに紙で資料作れって言うし、メールより電話の方が早いとか言って、結局電話の内容をメールでも送れって...効率化とか全然考えてない。私なら全部デジタル化して、会議も全部オンラインにして、でも重要な話は対面がいいから、結局今と変わらないかも。",
-                hints: "批判しながら同じ結論に至る、改善案の曖昧さ",
-                goodResponses: [
-                    "結局、今の上司と同じ結論じゃない？",
-                    "一周回って上司の考えに辿り着いたね",
-                    "その改革、現状維持って名前だよ"
-                ],
-                keywords: ["同じ", "結局", "変わらない", "一周", "矛盾", "現状維持"],
-                explanation: "上司を批判しながら、自分の改善案も結局同じところに行き着いている矛盾を指摘。"
-            },
-            {
-                situation: "恋愛相談",
-                message: "私、すごく自立してる女性なの。誰にも依存しないし、一人で何でもできる。でも彼氏には毎日LINEの返信早くして欲しいし、週末は必ず会いたいし、私のこと一番に考えて欲しい。あと、記念日は全部覚えててサプライズして欲しいな。でも束縛する女は嫌いって言ってるから、私は違うよね？",
-                hints: "自立していると言いながら依存的な要求",
-                goodResponses: [
-                    "その自立、彼氏には適用されないシステムなんだ",
-                    "束縛の定義、辞書で調べた方がいいかも",
-                    "自立してる人の要求リスト、すごく依存的だね"
-                ],
-                keywords: ["依存", "束縛", "矛盾", "自立", "要求", "違う", "逆"],
-                explanation: "自立を主張しながら、実際は依存的で束縛的な要求をしている矛盾を優しく指摘。"
-            }
-        ];
+        // CloudflareのWorker URL（ここを設定！）
+        const WORKER_URL = 'https://tsukkomi-ai.yukky86.workers.dev';
+
 
         let currentConversation = null;
         let totalScore = 0;
         let practiceCount = 0;
         let scores = [];
-        let currentRound = 0;
-        let usedHint = false;
+        let currentCategory = 'random';
 
-        function nextConversation() {
-            currentRound++;
-            practiceCount++;
-            
-            // ランダムに会話を選択
-            currentConversation = conversations[Math.floor(Math.random() * conversations.length)];
-            
-            // UIリセット
-            document.getElementById('situationTag').textContent = currentConversation.situation;
-            document.getElementById('friendMessage').textContent = currentConversation.message;
-            document.getElementById('responseInput').value = '';
-            document.getElementById('responseInput').disabled = false;
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('hintBtn').disabled = false;
-            document.getElementById('nextBtn').disabled = true;
-            document.getElementById('evaluationArea').classList.remove('show');
-            document.getElementById('hintBox').classList.remove('show');
-            usedHint = false;
-            
-            // 統計更新
-            document.getElementById('practiceCount').textContent = practiceCount;
-            document.getElementById('currentRound').textContent = currentRound;
-            
-            // 入力欄にフォーカス
-            document.getElementById('responseInput').focus();
+        // カテゴリ設定
+        function setCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
         }
 
+        // AIが新しい会話を生成（実際のAPI呼び出し）
+        async function generateNewConversation() {
+            showLoading(true);
+            
+            // ボタンを無効化
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            
+            try {
+                // Cloudflare Workers AIを呼び出し
+                const response = await fetch(`${WORKER_URL}/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        category: currentCategory 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('会話の生成に失敗しました');
+                }
+                
+                const conversation = await response.json();
+                currentConversation = conversation;
+                
+                // UIを更新
+                document.getElementById('situationTag').textContent = conversation.situation;
+                document.getElementById('friendMessage').textContent = conversation.message;
+                document.getElementById('responseInput').value = '';
+                document.getElementById('responseInput').disabled = false;
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('evaluationArea').classList.remove('show');
+                document.getElementById('errorMessage').classList.remove('show');
+                
+                // 統計更新
+                practiceCount++;
+                document.getElementById('currentRound').textContent = practiceCount;
+                document.getElementById('practiceCount').textContent = practiceCount;
+                
+                // 入力欄にフォーカス
+                document.getElementById('responseInput').focus();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('会話の生成に失敗しました。もう一度お試しください。');
+                // フォールバックとして従来の方法を使用
+                const conversation = generateConversationByCategory(currentCategory);
+                currentConversation = conversation;
+                document.getElementById('situationTag').textContent = conversation.situation;
+                document.getElementById('friendMessage').textContent = conversation.message;
+                document.getElementById('responseInput').disabled = false;
+                document.getElementById('submitBtn').disabled = false;
+            } finally {
+                showLoading(false);
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        // カテゴリに基づいて会話を生成
+        function generateConversationByCategory(category) {
+            const templates = {
+                work: [
+                    {
+                        situation: "職場での昼休み",
+                        patterns: [
+                            "最近、仕事の効率を上げるために{method}を始めたんですけど、{contradiction}しちゃって、結局{result}なんですよね。でも{excuse}から、これでいいと思うんです。",
+                        ]
+                    }
+                ],
+                friend: [
+                    {
+                        situation: "友人とのカフェ",
+                        patterns: [
+                            "この前{goal}しようと思って、{action}したんだけど、{unexpected}しちゃって。でも{positive_spin}だから、むしろ良かったかも！",
+                        ]
+                    }
+                ],
+                family: [
+                    {
+                        situation: "家族との夕食",
+                        patterns: [
+                            "最近{trend}にハマってて、{investment}したの。{problem}けど、{justification}から大丈夫だよね。",
+                        ]
+                    }
+                ],
+                shopping: [
+                    {
+                        situation: "ショッピング中",
+                        patterns: [
+                            "{saving_goal}と思って{shop}に行ったんだけど、{temptation}があって、結局{result}買っちゃった。でも{rationalization}だから、お得だよね？",
+                        ]
+                    }
+                ],
+                health: [
+                    {
+                        situation: "ジムでの会話",
+                        patterns: [
+                            "{health_goal}ために{action}してるんです。まあ、{contradiction}もしてますけど、{excuse}から問題ないですよね。{duration}続いてるし。",
+                        ]
+                    }
+                ]
+            };
+
+            // ランダムな要素を生成
+            const elements = {
+                method: ["ポモドーロテクニック", "早朝出社", "マルチタスク", "デスク整理"],
+                contradiction: ["休憩時間が長くなり", "SNSチェックが増え", "コーヒーブレイクが頻繁になり"],
+                result: ["前より時間かかってる", "残業が増えた", "疲れやすくなった"],
+                excuse: ["リフレッシュは大事", "情報収集も仕事", "質が上がってる"],
+                goal: ["節約", "ダイエット", "勉強", "早寝早起き"],
+                action: ["アプリをダウンロード", "本を買った", "ジムに入会", "計画を立てた"],
+                unexpected: ["全然使ってない", "3日で飽きた", "一回も行ってない", "計画倒れ"],
+                positive_spin: ["意識が変わった", "やる気は出た", "準備は整った", "気持ちは前向き"],
+                trend: ["断捨離", "ミニマリスト", "投資", "オーガニック生活"],
+                investment: ["大量に処分", "高級品を購入", "セミナーに参加", "会員になった"],
+                problem: ["すぐリバウンドした", "使いこなせてない", "よくわからない", "効果を感じない"],
+                justification: ["長期的に見れば", "経験が大事", "いつか役立つ", "健康には良い"],
+                saving_goal: ["節約しよう", "無駄遣いをやめよう", "必要なものだけ買おう"],
+                shop: ["セール", "アウトレット", "百均", "ディスカウントストア"],
+                temptation: ["限定品", "70%OFF", "タイムセール", "ポイント10倍"],
+                rationalization: ["元値を考えれば", "いつか使う", "安いうちに", "ポイントも貯まった"],
+                health_goal: ["痩せる", "筋肉をつける", "体力向上", "健康維持"],
+                duration: ["もう2日も", "今週で3回目", "先月から", "この1週間"]
+            };
+
+            // カテゴリに応じてテンプレートを選択
+            let selectedTemplate;
+            if (category === 'random') {
+                const allCategories = Object.keys(templates);
+                const randomCat = allCategories[Math.floor(Math.random() * allCategories.length)];
+                selectedTemplate = templates[randomCat][0];
+            } else {
+                selectedTemplate = templates[category] ? templates[category][0] : templates.work[0];
+            }
+
+            // パターンをランダムに選択し、要素を埋め込む
+            let pattern = selectedTemplate.patterns[Math.floor(Math.random() * selectedTemplate.patterns.length)];
+            
+            // 要素を置換
+            Object.keys(elements).forEach(key => {
+                const regex = new RegExp(`{${key}}`, 'g');
+                if (pattern.includes(`{${key}}`)) {
+                    const values = elements[key];
+                    const value = values[Math.floor(Math.random() * values.length)];
+                    pattern = pattern.replace(regex, value);
+                }
+            });
+
+            return {
+                situation: selectedTemplate.situation,
+                message: pattern,
+                category: category
+            };
+        }
+
+        // レスポンスを送信して評価
         function submitResponse() {
             const userResponse = document.getElementById('responseInput').value.trim();
             
@@ -574,110 +669,98 @@
                 return;
             }
             
-            // 評価
-            const score = evaluateResponse(userResponse);
-            displayEvaluation(score, userResponse);
-            
-            // スコア更新
-            totalScore += score;
-            scores.push(score);
-            updateStats();
-            
-            // ボタン状態更新
-            document.getElementById('responseInput').disabled = true;
+            showLoading(true);
             document.getElementById('submitBtn').disabled = true;
-            document.getElementById('hintBtn').disabled = true;
-            document.getElementById('nextBtn').disabled = false;
+            document.getElementById('generateBtn').disabled = true;
+            
+            // AIが評価するシミュレーション
+            setTimeout(() => {
+                const evaluation = evaluateWithAI(userResponse, currentConversation);
+                displayEvaluation(evaluation, userResponse);
+                
+                // スコア更新
+                totalScore += evaluation.score;
+                scores.push(evaluation.score);
+                updateStats();
+                
+                showLoading(false);
+                document.getElementById('responseInput').disabled = true;
+                document.getElementById('generateBtn').disabled = false;
+            }, 1500);
         }
 
-        function evaluateResponse(response) {
-            const lowerResponse = response.toLowerCase();
-            let score = 40; // 基礎点
-            let matchedKeywords = 0;
+        // AIによる評価（シミュレーション）
+        function evaluateWithAI(response, conversation) {
+            // 実際にはここでAI APIを呼んで評価を取得
+            const score = Math.floor(Math.random() * 40) + 60; // 60-100のランダムスコア
             
-            // キーワードマッチング
-            for (const keyword of currentConversation.keywords) {
-                if (lowerResponse.includes(keyword)) {
-                    matchedKeywords++;
+            const evaluations = {
+                high: {
+                    message: "素晴らしい返しです！矛盾点を的確に指摘していますね。",
+                    badges: ["鋭い観察眼", "ユーモアセンス", "的確な指摘"],
+                    example: "「" + generateGoodResponse(conversation.message) + "」",
+                    comment: "相手の話の核心的な矛盾を、ユーモアを交えて指摘できています。会話の流れを壊さず、相手も笑顔になれる絶妙な返しです。"
+                },
+                medium: {
+                    message: "いい返しです！もう少し具体的に矛盾を指摘すると更に良くなります。",
+                    badges: ["良い着眼点", "会話力"],
+                    example: "「" + generateGoodResponse(conversation.message) + "」",
+                    comment: "ポイントは押さえていますが、もう少し具体的な数字や状況を使って返すと、より説得力が増します。"
+                },
+                low: {
+                    message: "返しとしては成立していますが、相手の矛盾をもっと鋭く指摘してみましょう。",
+                    badges: ["チャレンジャー"],
+                    example: "「" + generateGoodResponse(conversation.message) + "」",
+                    comment: "相手の話をよく聞いて、『それって○○じゃない？』という形で矛盾を指摘してみましょう。"
                 }
+            };
+            
+            let evaluation;
+            if (score >= 85) {
+                evaluation = evaluations.high;
+            } else if (score >= 70) {
+                evaluation = evaluations.medium;
+            } else {
+                evaluation = evaluations.low;
             }
             
-            // スコア計算
-            score += matchedKeywords * 15;
-            
-            // 返しの質を評価
-            if (response.length >= 20 && response.length <= 60) {
-                score += 10; // 適切な長さ
-            }
-            
-            // 疑問形で返している場合
-            if (response.includes('？') || response.includes('?')) {
-                score += 5;
-            }
-            
-            // ユーモア要素（皮肉、比喩を含む場合）
-            const humorWords = ['みたい', 'そう', 'かも', 'だね', 'じゃない', 'という', 'って'];
-            for (const word of humorWords) {
-                if (lowerResponse.includes(word)) {
-                    score += 3;
-                    break;
-                }
-            }
-            
-            // ヒント使用ペナルティ
-            if (usedHint) {
-                score = Math.floor(score * 0.8);
-            }
-            
-            return Math.min(score, 100);
+            return {
+                score: score,
+                ...evaluation
+            };
         }
 
-        function displayEvaluation(score, userResponse) {
+        // 良い返しの例を生成
+        function generateGoodResponse(message) {
+            const responses = [
+                "それって最初の目的と真逆の結果になってない？",
+                "一周回って元の場所に戻ってきた感じだね",
+                "その理論だと、みんな成功してるはずだけど...",
+                "効率を上げる方法を見直した方が効率的かも",
+                "それ、本末転倒の教科書に載せたいレベル"
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        // 評価を表示
+        function displayEvaluation(evaluation, userResponse) {
             const evaluationArea = document.getElementById('evaluationArea');
             const scoreNumber = document.getElementById('scoreNumber');
             const scoreMessage = document.getElementById('scoreMessage');
             const userResponseDiv = document.getElementById('userResponse');
             const goodExample = document.getElementById('goodExample');
-            const explanation = document.getElementById('explanation');
+            const aiComment = document.getElementById('aiComment');
             const skillBadges = document.getElementById('skillBadges');
             
-            // スコア表示
-            scoreNumber.textContent = score;
-            
-            // メッセージ
-            let message = '';
-            let badges = [];
-            
-            if (score >= 90) {
-                message = '完璧！プロレベルの返しです！';
-                badges = ['鋭い観察眼', 'ユーモアセンス', '的確な指摘'];
-            } else if (score >= 75) {
-                message = '素晴らしい！キレのある返しです！';
-                badges = ['良い着眼点', 'ウィット'];
-            } else if (score >= 60) {
-                message = 'いい感じ！もう少し鋭さが欲しい！';
-                badges = ['観察力'];
-            } else if (score >= 45) {
-                message = 'まずまず。矛盾点を見つけられていますか？';
-                badges = ['努力賞'];
-            } else {
-                message = '練習あるのみ！相手の話をよく聞いてみよう';
-                badges = ['チャレンジャー'];
-            }
-            
-            scoreMessage.textContent = message;
+            scoreNumber.textContent = evaluation.score;
+            scoreMessage.textContent = evaluation.message;
             userResponseDiv.textContent = userResponse;
-            
-            // 良い例を表示
-            const exampleIndex = Math.floor(Math.random() * currentConversation.goodResponses.length);
-            goodExample.textContent = currentConversation.goodResponses[exampleIndex];
-            
-            // 解説
-            explanation.textContent = currentConversation.explanation;
+            goodExample.textContent = evaluation.example;
+            aiComment.textContent = evaluation.comment;
             
             // スキルバッジ表示
             skillBadges.innerHTML = '';
-            badges.forEach(badge => {
+            evaluation.badges.forEach(badge => {
                 const badgeDiv = document.createElement('div');
                 badgeDiv.className = 'skill-badge';
                 badgeDiv.textContent = badge;
@@ -687,17 +770,7 @@
             evaluationArea.classList.add('show');
         }
 
-        function showHint() {
-            const hintBox = document.getElementById('hintBox');
-            const hintText = document.getElementById('hintText');
-            
-            hintText.textContent = currentConversation.hints;
-            hintBox.classList.add('show');
-            usedHint = true;
-            
-            document.getElementById('hintBtn').disabled = true;
-        }
-
+        // 統計を更新
         function updateStats() {
             document.getElementById('totalScore').textContent = totalScore;
             
@@ -705,6 +778,26 @@
                 const average = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
                 document.getElementById('averageScore').textContent = average;
             }
+        }
+
+        // ローディング表示
+        function showLoading(show) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (show) {
+                loadingIndicator.classList.add('show');
+            } else {
+                loadingIndicator.classList.remove('show');
+            }
+        }
+
+        // エラー表示
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
         }
 
         // Enterキーで送信（Shift+Enterは改行）
